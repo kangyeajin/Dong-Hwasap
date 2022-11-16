@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<script src="build/main.min.js"></script>
+<script>
+
+    function getQueryParams(qs) {
+        qs = qs.split('+').join(' ');
+
+        var params = {},
+                tokens,
+                re = /[?&]?([^=]+)=([^&]*)/g;
+
+        while (tokens = re.exec(qs)) {
+            params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+        }
+
+        return params;
+    }
+
+    var ptType = 'M_pt_webview';
+    var swingAppInfo = {
+        appId : '',
+        versionValue : 0.2
+    }
+    var contextServerHost = 'http://www.swing2app.co.kr';
+
+    var categoryViewModel = {
+
+        isInit: false,
+        articleId: null,
+        menuList: [],
+        makeTreeMenu: function ( menuList ) {
+            var treeMapList = new Map();
+            var treeMenuList = [];
+            for( var i = 0; i < menuList.length; i++ )
+            {
+                if( menuList[i].menuFlag == 'MAIN_HOME' ) {
+                    location.href = menuList[i].linkUrl;
+                }
+            }
+        },
+        loadContextServer : function ( successCallBackUrl , failureCallback)
+        {
+            $.ajax({
+                url: contextServerHost + "/mobile/mobile_context_path",
+                type: "get",
+                dataType: "json",
+                data : {
+                    version_value : swingAppInfo.versionValue,
+                    app_id : swingAppInfo.appId
+                },
+                success: function (model) {
+
+                    if( model.use_valid != 1 )
+                    {
+                        alert('앱 사용 기간이 종료되었습니다.');
+                        return;
+                    }
+
+                    serverHost = model.context_path;
+
+                    successCallBackUrl();
+                },error : function(e)
+                {
+                    alert('앱을 시작할 수 없습니다.(관리자에게 문의하세요)');
+                }
+            });
+        },
+        initAppLoad : function()
+        {
+            this.loadContextServer(function(e) {
+                $.ajax({
+                    url: serverHost + "/common/app-init-data",
+                    type: "post",
+                    dataType: "json",
+                    data : {
+                        menu_type_code : ptType,
+                        appId : swingAppInfo.appId
+                    },
+                    success: function (model) {
+                        // extend the categoryViewModel with the response from the server
+                        categoryViewModel.makeTreeMenu(model.list_menu);
+
+                    }
+                });
+            }, function(e) {
+                alert('앱을 시작할 수 없습니다.(관리자에게 문의하세요)');
+            });
+
+
+        }
+    };
+
+
+
+    swingAppInfo.appId = 'f6be9463-5e65-4471-a030-cc8861118236'; //#RF_SRC_APP_ID
+    swingAppInfo.versionValue = '0.6'; //#RF_SRC_VERSION_VALUE
+
+
+    categoryViewModel.initAppLoad();
+
+
+</script>
+</html>

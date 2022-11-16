@@ -1,0 +1,89 @@
+<html>
+<head>
+    <meta http-equiv="Content-Security-Policy" content="style-src 'self' 'unsafe-inline' http://www.swing2app.co.kr http://pcdn2.swing2app.co.kr; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://www.swing2app.co.kr http://pcdn2.swing2app.co.kr http://s1.daumcdn.net http://dmaps.daum.net http://developers.kakao.com https://developers.kakao.com https://itunes.apple.com"/>
+    <script type="text/javascript" src="lib/js/jquery.min.js" ></script>
+    <script type="text/javascript" src="cordova.js" ></script>
+    <script>
+        document.addEventListener('deviceready', function (e) {
+
+
+            if( plugins != null && plugins.appPreferences != null )
+            {
+                var prefs = plugins.appPreferences;
+                var fetchVariable = prefs.fetch('path');
+                var versionVariable = prefs.fetch('version');
+
+                function loadPath() {
+                    fetchVariable.then(function(value) {
+                        if( value != null && value != -1 && value != '')
+                        {
+                            var appPath = value;
+
+                            if ( cordova.platformId == 'android') {
+                                location.href = appPath;
+                            }
+                            if ( cordova.platformId == 'ios') {
+
+                                resolveLocalFileSystemURL(appPath, function (fileEntry) {
+                                    ContentSync.loadUrl(appPath, function() {
+                                        console.log('success');
+                                    });
+                                }, function () {
+                                    location.href = 'main.html';
+                                    console.log('path : main.html');
+                                });
+                            }
+
+                            console.log('path : ' + appPath );
+                        }
+                        else {
+                            location.href = 'main.html';
+                            console.log('path : main.html');
+                        }
+
+
+                    });
+                }
+
+                versionVariable.then(function(value){
+                    if( value != null && value != -1 && value != '')
+                    {
+                        if( window.AppVersion != null && window.AppVersion.version != null )
+                        {
+                            var hwVersion = parseFloat(window.AppVersion.version);
+                            var localVersion = parseFloat(value);
+
+                            if( hwVersion > localVersion )
+                            {
+                                prefs.store(function (value) {
+                                }, function (error) {
+                                }, 'path', '');
+                                location.href = 'main.html';
+                            }
+                            else
+                            {
+                                loadPath();
+                            }
+                        }
+                        else
+                        {
+                            loadPath();
+                        }
+                    }
+                    else {
+                        loadPath();
+                    }
+                });
+            }
+            else {
+                location.href = 'main.html';
+                console.log('path : main.html');
+            }
+
+        }, false);
+
+
+
+    </script>
+</head>
+</html>
